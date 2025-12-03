@@ -1,0 +1,50 @@
+# MiniMinds Academy Directory Structure
+
+miniminds-academy/
+├── assets/
+│   ├── css/
+│   │   ├── style.css
+│   │   └── kids-style.css
+│   ├── js/
+│   │   ├── main.js
+│   │   └── kids.js
+│   ├── images/
+│   │   ├── avatars/
+│   │   ├── badges/
+│   │   ├── courses/
+│   │   └── ui/
+│   └── fonts/
+├── includes/
+│   ├── config.php
+│   ├── functions.php
+│   ├── header.php
+│   ├── footer.php
+│   └── auth.php
+├── parents/
+│   ├── index.php
+│   ├── dashboard.php
+│   ├── register.php
+│   ├── login.php
+│   ├── children.php
+│   ├── reports.php
+│   └── settings.php
+├── kids/
+│   ├── index.php
+│   ├── login.php
+│   ├── dashboard.php
+│   ├── play.php
+│   ├── profile.php
+│   └── store.php
+├── admin/
+│   ├── index.php
+│   ├── courses.php
+│   ├── users.php
+│   └── reports.php
+├── api/
+│   ├── auth.php
+│   ├── progress.php
+│   └── courses.php
+├── database/
+│   └── miniminds.sql
+├── README.md
+└── index.php

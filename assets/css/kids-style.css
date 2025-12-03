@@ -1,0 +1,748 @@
+/**
+ * MiniMinds Academy - Kids Theme Stylesheet
+ * Fun, colorful, and engaging styling for children's interface
+ */
+
+/* Kids Theme Base Styles */
+.kids-theme {
+    font-family: 'Fredoka', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+.kids-main {
+    background: transparent;
+    padding: 2rem 0;
+}
+
+/* Kids Dashboard Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border-radius: 25px;
+    padding: 3rem 2rem;
+    color: white;
+    margin-bottom: 3rem;
+    box-shadow: 0 15px 35px rgba(245, 87, 108, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.hero-section::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -5%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.welcome-text h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.wave-emoji {
+    display: inline-block;
+    animation: wave 1.5s ease-in-out infinite;
+}
+
+@keyframes wave {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(20deg); }
+    75% { transform: rotate(-10deg); }
+}
+
+.welcome-text .lead {
+    font-size: 1.25rem;
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+.avatar-container {
+    text-align: center;
+    position: relative;
+}
+
+.main-avatar {
+    width: 120px;
+    height: 120px;
+    border: 4px solid white;
+    border-radius: 50%;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.level-badge {
+    position: absolute;
+    bottom: 0;
+    right: 20%;
+    background: linear-gradient(135deg, #feca57, #ff9ff3);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 5px 15px rgba(254, 202, 87, 0.4);
+}
+
+/* Stats Bar */
+.stats-bar {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.progress-container {
+    margin-bottom: 1rem;
+}
+
+.progress-label {
+    font-weight: 600;
+    color: var(--dark-color);
+    font-size: 1.1rem;
+}
+
+.progress-value {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.xp-progress {
+    height: 15px;
+    background-color: #e9ecef;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.xp-bar {
+    background: linear-gradient(90deg, #feca57, #ff9ff3, #48dbfb, #ff6b6b);
+    background-size: 300% 100%;
+    animation: gradientShift 3s ease infinite;
+    border-radius: 15px;
+    position: relative;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.progress-percentage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: 600;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.quick-stats {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 1rem;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    flex: 1;
+    min-width: 120px;
+}
+
+.stat-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    color: white;
+    font-size: 1.25rem;
+}
+
+.points-icon { background: linear-gradient(135deg, #feca57, #ff9ff3); }
+.streak-icon { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
+.lessons-icon { background: linear-gradient(135deg, #48dbfb, #0abde3); }
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Main Play Button */
+.btn-play-main {
+    position: relative;
+    display: inline-block;
+    background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    font-size: 2.5rem;
+    font-weight: 700;
+    padding: 2.5rem 5rem;
+    border-radius: 60px;
+    text-decoration: none;
+    box-shadow: 0 15px 35px rgba(245, 87, 108, 0.4);
+    transition: all 0.3s ease;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    animation: pulse 2s infinite, float 3s ease-in-out infinite;
+    z-index: 1;
+}
+
+.btn-play-main::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, #f5576c 0%, #f093fb 100%);
+    border-radius: 60px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+}
+
+.btn-play-main:hover::before {
+    opacity: 1;
+}
+
+.btn-play-main:hover {
+    transform: scale(1.05);
+    color: white;
+    text-decoration: none;
+    box-shadow: 0 20px 40px rgba(245, 87, 108, 0.5);
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 15px 35px rgba(245, 87, 108, 0.4); }
+    50% { box-shadow: 0 20px 45px rgba(245, 87, 108, 0.6); }
+    100% { box-shadow: 0 15px 35px rgba(245, 87, 108, 0.4); }
+}
+
+.btn-play-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.play-subtitle {
+    color: white;
+    font-size: 1.2rem;
+    margin-top: 1rem;
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+/* Section Headers */
+.section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+.section-subtitle {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+}
+
+/* Course Cards */
+.courses-grid {
+    gap: 2rem;
+}
+
+.course-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    border: 2px solid transparent;
+    height: 100%;
+}
+
+.course-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.course-header {
+    position: relative;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+}
+
+.course-icon-bg {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.course-difficulty {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+}
+
+.difficulty-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.difficulty-beginner { background: linear-gradient(135deg, #48bb78, #38a169); color: white; }
+.difficulty-intermediate { background: linear-gradient(135deg, #f6ad55, #ed8936); color: white; }
+.difficulty-advanced { background: linear-gradient(135deg, #fc5c65, #eb3b5a); color: white; }
+
+.course-body {
+    padding: 1.5rem;
+}
+
+.course-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 0.75rem;
+}
+
+.course-description {
+    color: #6c757d;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+.course-progress {
+    margin-bottom: 1.5rem;
+}
+
+.course-progress-bar {
+    background: linear-gradient(90deg, #48dbfb, #0abde3);
+    height: 10px;
+}
+
+.course-footer {
+    padding: 1rem 1.5rem;
+    background: rgba(248, 249, 250, 0.8);
+    border-top: 1px solid #e9ecef;
+}
+
+.course-stats {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.course-stat {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.btn-course-action {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 20px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.btn-course-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* Quest Cards */
+.quests-section {
+    gap: 1.5rem;
+}
+
+.quest-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    height: 100%;
+}
+
+.quest-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+.quest-card.completed {
+    background: linear-gradient(135deg, rgba(72, 187, 120, 0.1), rgba(56, 161, 105, 0.1));
+    border: 2px solid #48bb78;
+}
+
+.quest-icon {
+    text-align: center;
+    margin-bottom: 1rem;
+    font-size: 2.5rem;
+}
+
+.quest-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+}
+
+.quest-description {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.quest-progress-text {
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.quest-progress-bar {
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 10px;
+}
+
+.quest-rewards {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.reward-badge {
+    background: linear-gradient(135deg, #feca57, #ff9ff3);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* Achievement Cards */
+.achievements-carousel {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.achievement-card {
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+}
+
+.achievement-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.achievement-icon {
+    margin-right: 1rem;
+}
+
+.achievement-badge {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 3px solid #feca57;
+}
+
+.achievement-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 0.25rem;
+}
+
+.achievement-description {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.achievement-date {
+    color: #adb5bd;
+    font-size: 0.8rem;
+}
+
+/* Quick Actions */
+.quick-actions {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.action-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--dark-color);
+    padding: 1.5rem;
+    border-radius: 15px;
+    background: white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+}
+
+.action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    color: var(--dark-color);
+    text-decoration: none;
+}
+
+.action-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.bg-purple { background: linear-gradient(135deg, #667eea, #764ba2); }
+.bg-orange { background: linear-gradient(135deg, #feca57, #ff9ff3); }
+.bg-blue { background: linear-gradient(135deg, #48dbfb, #0abde3); }
+.bg-green { background: linear-gradient(135deg, #48bb78, #38a169); }
+
+.action-label {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* Responsive Design for Kids */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 2rem 1rem;
+    }
+    
+    .welcome-text h1 {
+        font-size: 2rem;
+    }
+    
+    .main-avatar {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .btn-play-main {
+        font-size: 1.8rem;
+        padding: 2rem 3rem;
+    }
+    
+    .section-title {
+        font-size: 2rem;
+    }
+    
+    .quick-stats {
+        justify-content: center;
+    }
+    
+    .stat-item {
+        min-width: 100px;
+    }
+    
+    .course-card,
+    .quest-card {
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* Animations for Kids */
+.bounce-in {
+    animation: bounceIn 0.8s ease-out;
+}
+
+@keyframes bounceIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.05); }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.wiggle {
+    animation: wiggle 0.5s ease-in-out;
+}
+
+@keyframes wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(3deg); }
+    75% { transform: rotate(-3deg); }
+}
+
+/* Kid-friendly Form Styles */
+.kids-theme .form-control {
+    border-radius: 15px;
+    border: 3px solid #e9ecef;
+    padding: 1rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.kids-theme .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.3rem rgba(102, 126, 234, 0.25);
+}
+
+.kids-theme .btn {
+    border-radius: 25px;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Fun Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(102, 126, 234, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loading-spinner {
+    background: white;
+    padding: 3rem;
+    border-radius: 25px;
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    text-align: center;
+}
+
+.loading-spinner i {
+    animation: spin 1s linear infinite;
+}
+
+/* Accessibility for Kids */
+.kids-theme .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Focus styles for keyboard navigation */
+.kids-theme a:focus,
+.kids-theme button:focus,
+.kids-theme .course-card:focus {
+    outline: 3px solid #feca57;
+    outline-offset: 2px;
+}
+
+/* Print styles for parents */
+@media print {
+    .kids-theme {
+        background: white;
+    }
+    
+    .hero-section,
+    .stats-bar,
+    .btn-play-main,
+    .quick-actions {
+        display: none;
+    }
+    
+    .course-card,
+    .quest-card,
+    .achievement-card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        break-inside: avoid;
+    }
+}
