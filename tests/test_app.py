@@ -20,5 +20,11 @@ class MiniMindsTests(unittest.TestCase):
         response = self.client.post('/kids', data={'child_id':'1','pin':'1234'}, follow_redirects=True)
         self.assertIn(b"Let's make today amazing", response.data)
 
+    def test_assets_are_served_by_flask(self):
+        response = self.client.get('/assets/css/style.css')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'body', response.data)
+
 if __name__ == '__main__':
     unittest.main()
