@@ -26,5 +26,12 @@ class MiniMindsTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'body', response.data)
 
+    def test_learning_dashboard_shows_the_expanded_lesson_library(self):
+        response = self.client.get('/')
+        self.assertIn(b'6 playful lessons', response.data)
+        self.assertEqual(len(app.LESSONS['Coding Adventures']), 6)
+        self.assertEqual(len(app.LESSONS['Business Buddies']), 6)
+        self.assertEqual(len(app.LESSONS['Story Magic']), 6)
+
 if __name__ == '__main__':
     unittest.main()

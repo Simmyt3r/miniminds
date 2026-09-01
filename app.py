@@ -30,9 +30,21 @@ COURSES = [
     ("Story Magic", "story", "Read, imagine, and solve adventures one page at a time."),
 ]
 LESSONS = {
-    "Coding Adventures": [("Hello, Computer!", 10, 5), ("Colors and Commands", 15, 8), ("The Loop Detective", 20, 10)],
-    "Business Buddies": [("Money Matters", 10, 5), ("The Lemonade Stand", 20, 10), ("Saving Secrets", 15, 8)],
-    "Story Magic": [("The Brave Little Robot", 10, 5), ("Dragon's Math Adventure", 15, 8), ("The Friendship Garden", 12, 6)],
+    "Coding Adventures": [
+        ("Hello, Computer!", 10, 5), ("Colors and Commands", 15, 8),
+        ("The Loop Detective", 20, 10), ("Build a Bug Bot", 18, 9),
+        ("Super Sprite Challenge", 25, 12), ("Code Your Celebration", 22, 11),
+    ],
+    "Business Buddies": [
+        ("Money Matters", 10, 5), ("The Lemonade Stand", 20, 10),
+        ("Saving Secrets", 15, 8), ("The Kindness Shop", 18, 9),
+        ("Plan a Picnic", 20, 10), ("Dream Big, Budget Smart", 25, 12),
+    ],
+    "Story Magic": [
+        ("The Brave Little Robot", 10, 5), ("Dragon's Math Adventure", 15, 8),
+        ("The Friendship Garden", 12, 6), ("Moonlight Map Makers", 18, 9),
+        ("The Lost Library Key", 20, 10), ("Write a Happy Ending", 22, 11),
+    ],
 }
 
 def db():
