@@ -15,12 +15,18 @@ Without configuration, local development uses `instance/miniminds.db`. This is i
 
 ## Deploy to Vercel
 
-1. Create a Postgres database (Vercel Postgres, Neon, or another provider).
-2. In the Vercel project settings, add `DATABASE_URL` with the Postgres connection URL.
+1. Create a Postgres database (Supabase, Vercel Postgres, Neon, or another provider).
+2. In the Vercel project settings, add the Supabase **server-side** pooler URL as `DATABASE_URL` (or `mini_POSTGRES_URL`). Do not use an anon, publishable, service-role, or browser-exposed `NEXT_PUBLIC_*` key for this setting.
 3. Add a long random `SECRET_KEY`, for example `python -c "import secrets; print(secrets.token_urlsafe(48))"`.
 4. Deploy. `vercel.json` sends every route to `api/index.py`, which exposes the Flask app.
 
 The app creates its tables on first request. Production data—including accounts, child profiles, lesson completions, and XP—is stored in Postgres, not the serverless filesystem.
+
+### Supabase production schema
+
+For a new Supabase project, apply [`database/supabase_schema.sql`](database/supabase_schema.sql) once through the Supabase SQL editor or a privileged `psql` connection. It creates constrained, indexed parent/learner/progress tables, an immutable reward ledger, and update timestamps. The application also creates its required core tables when it starts, so deployments remain backward compatible; the SQL file is the recommended auditable provisioning artifact.
+
+Copy `.env.example` to `.env` only for local development and fill in your own values. `.env` is ignored by Git. Rotate any credential that has been pasted into a chat, issue, terminal log, or repository history.
 
 ## Persistent login
 
