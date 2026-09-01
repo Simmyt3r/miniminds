@@ -2,12 +2,29 @@ import os
 import sqlite3
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from flask import Flask, abort, flash, g, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 BASE_DIR = Path(__file__).resolve().parent
-DATABASE_URL = os.environ.get("DATABASE_URL", "")
+# `DATABASE_URL` is the conventional name used by most hosts.  The second
+# name lets this app consume the Supabase pooler URL without copying a secret
+# into source control.
+def postgres_url_from_environment():
+    """Return a psycopg-compatible Postgres URL without host-specific hints."""
+    value = os.environ.get("DATABASE_URL") or os.environ.get("mini_POSTGRES_URL", "")
+    if not value:
+        return ""
+    parsed = urlsplit(value)
+    # Supabase's dashboard URLs may include `pgbouncer` or `supa` markers.
+    # They are useful to its clients but are not libpq connection parameters.
+    query = [(key, item) for key, item in parse_qsl(parsed.query, keep_blank_values=True)
+             if key not in {"pgbouncer", "supa"}]
+    return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, urlencode(query), parsed.fragment))
+
+
+DATABASE_URL = postgres_url_from_environment()
 # Vercel's deployed application directory is read-only.  Keep SQLite useful for
 # local development while putting its serverless fallback in the writable temp
 # directory.  Production deployments should still provide DATABASE_URL so data
@@ -92,9 +109,14 @@ def rows(sql, params=()):
 def init_db():
     if DATABASE_URL:
         statements = [
-            "CREATE TABLE IF NOT EXISTS parents (id SERIAL PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL)",
-            "CREATE TABLE IF NOT EXISTS children (id SERIAL PRIMARY KEY, parent_id INTEGER NOT NULL REFERENCES parents(id) ON DELETE CASCADE, name TEXT NOT NULL, age INTEGER NOT NULL, pin_hash TEXT NOT NULL, points INTEGER NOT NULL DEFAULT 0, xp INTEGER NOT NULL DEFAULT 0)",
-            "CREATE TABLE IF NOT EXISTS completions (child_id INTEGER NOT NULL REFERENCES children(id) ON DELETE CASCADE, lesson_key TEXT NOT NULL, PRIMARY KEY(child_id, lesson_key))",
+            "CREATE TABLE IF NOT EXISTS parents (id BIGSERIAL PRIMARY KEY, name TEXT NOT NULL CHECK (char_length(name) BETWEEN 1 AND 120), email TEXT NOT NULL, password_hash TEXT NOT NULL CHECK (char_length(password_hash) > 0), created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now())",
+            "CREATE UNIQUE INDEX IF NOT EXISTS parents_email_unique ON parents (lower(email))",
+            "CREATE TABLE IF NOT EXISTS children (id BIGSERIAL PRIMARY KEY, parent_id BIGINT NOT NULL REFERENCES parents(id) ON DELETE CASCADE, name TEXT NOT NULL CHECK (char_length(name) BETWEEN 1 AND 80), age SMALLINT NOT NULL CHECK (age BETWEEN 4 AND 9), pin_hash TEXT NOT NULL CHECK (char_length(pin_hash) > 0), points INTEGER NOT NULL DEFAULT 0 CHECK (points >= 0), xp INTEGER NOT NULL DEFAULT 0 CHECK (xp >= 0), created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now())",
+            "CREATE INDEX IF NOT EXISTS children_parent_id_idx ON children (parent_id, id DESC)",
+            "CREATE TABLE IF NOT EXISTS completions (child_id BIGINT NOT NULL REFERENCES children(id) ON DELETE CASCADE, lesson_key TEXT NOT NULL CHECK (char_length(lesson_key) BETWEEN 1 AND 200), completed_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY(child_id, lesson_key))",
+            "CREATE INDEX IF NOT EXISTS completions_child_completed_idx ON completions (child_id, completed_at DESC)",
+            "CREATE TABLE IF NOT EXISTS reward_events (id BIGSERIAL PRIMARY KEY, child_id BIGINT NOT NULL REFERENCES children(id) ON DELETE CASCADE, completion_lesson_key TEXT NOT NULL, xp_delta INTEGER NOT NULL CHECK (xp_delta >= 0), points_delta INTEGER NOT NULL CHECK (points_delta >= 0), created_at TIMESTAMPTZ NOT NULL DEFAULT now(), UNIQUE(child_id, completion_lesson_key))",
+            "CREATE INDEX IF NOT EXISTS reward_events_child_created_idx ON reward_events (child_id, created_at DESC)",
         ]
     else:
         statements = [
@@ -202,10 +224,26 @@ def complete_lesson(course, index):
     lessons = LESSONS.get(course)
     if not lessons or index < 0 or index >= len(lessons): abort(404)
     key = f"{course}:{index}"
-    if not one("SELECT child_id FROM completions WHERE child_id = ? AND lesson_key = ?", (session["child_id"], key)):
+    # The unique completion key, not a read-then-write check, makes this
+    # idempotent when a learner double-clicks or retries a request.
+    if g.postgres:
+        inserted = one(
+            "INSERT INTO completions (child_id, lesson_key) VALUES (?, ?) ON CONFLICT DO NOTHING RETURNING child_id",
+            (session["child_id"], key),
+        )
+    else:
+        inserted = execute(
+            "INSERT OR IGNORE INTO completions (child_id, lesson_key) VALUES (?, ?)",
+            (session["child_id"], key),
+        ).rowcount
+    if inserted:
         title, xp, points = lessons[index]
-        execute("INSERT INTO completions (child_id, lesson_key) VALUES (?, ?)", (session["child_id"], key))
         execute("UPDATE children SET xp = xp + ?, points = points + ? WHERE id = ?", (xp, points, session["child_id"]))
+        if g.postgres:
+            execute(
+                "INSERT INTO reward_events (child_id, completion_lesson_key, xp_delta, points_delta) VALUES (?, ?, ?, ?)",
+                (session["child_id"], key, xp, points),
+            )
         flash(f"Amazing work! You earned {xp} XP and {points} stars for {title}.", "success")
     return redirect(url_for("kid_dashboard"))
 
