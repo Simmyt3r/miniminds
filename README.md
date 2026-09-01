@@ -11,7 +11,7 @@ pip install -r requirements.txt
 flask --app app run --debug
 ```
 
-Without configuration, local development uses `instance/miniminds.db`. This is intentionally a local-only convenience database.
+Without configuration, local development uses `instance/miniminds.db`. This is intentionally a local-only convenience database. If `DATABASE_URL` is omitted on Vercel, the app instead uses `/tmp/miniminds.db` so the function can start; that temporary database is reset whenever the function instance is replaced and must not be used for production data.
 
 ## Deploy to Vercel
 

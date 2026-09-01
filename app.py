@@ -8,9 +8,14 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
-LOCAL_DB = Path(os.environ.get("SQLITE_PATH", BASE_DIR / "instance" / "miniminds.db"))
+# Vercel's deployed application directory is read-only.  Keep SQLite useful for
+# local development while putting its serverless fallback in the writable temp
+# directory.  Production deployments should still provide DATABASE_URL so data
+# survives function restarts.
+DEFAULT_SQLITE_PATH = Path("/tmp/miniminds.db") if os.environ.get("VERCEL") else BASE_DIR / "instance" / "miniminds.db"
+LOCAL_DB = Path(os.environ.get("SQLITE_PATH", DEFAULT_SQLITE_PATH))
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="assets")
 app.config.update(
     SECRET_KEY=os.environ.get("SECRET_KEY", "development-only-change-me"),
     PERMANENT_SESSION_LIFETIME=timedelta(days=30),
