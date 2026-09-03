@@ -1,1 +1,40 @@
-{% extends 'base.html' %}{% block content %}<p class="small"><a href="{{ url_for('learning_path', path_id=path.id) }}">← Back to {{ path.title }}</a></p><section class="hero"><p class="eyebrow">{{ lesson.category|upper }} · {{ lesson.lesson_type|upper }} · AGES {{ lesson.age_min }}–{{ lesson.age_max }}</p><h1>{{ lesson.title }}</h1><p>Join {{ lesson.character }} in {{ lesson.setting }}.</p><p><strong>⚡ {{ lesson.xp }} XP</strong> · <strong>⭐ {{ lesson.points }} stars</strong> · {{ lesson.minutes }} minutes</p></section><section class="panel" style="margin:24px 0"><h2>Your mission</h2><p style="white-space:pre-line">{{ lesson.content }}</p><h3>What you'll learn</h3><ul>{% for objective in lesson.objectives %}<li>{{ objective }}</li>{% endfor %}</ul><h3>Grown-up tip</h3><p class="muted">{{ lesson.parent_tip }}</p><form method="post" action="{{ url_for('complete_lesson', lesson_id=lesson.id) }}"><button>Finish lesson ✦</button></form></section>{% endblock %}
+{% extends 'base.html' %}
+{% block content %}
+<p class="small"><a href="{{ url_for('learning_path', path_id=path.id) }}">← Back to {{ path.title }}</a></p>
+<section class="hero lesson-hero">
+  <p class="eyebrow">{{ lesson.category|upper }} · {{ lesson.lesson_type|upper }} · AGES {{ lesson.age_min }}–{{ lesson.age_max }}</p>
+  <h1>{{ lesson.title }}</h1>
+  <p>Join {{ lesson.character }} in {{ lesson.setting }}.</p>
+  <p><strong>⚡ {{ lesson.xp }} XP</strong> · <strong>⭐ {{ lesson.points }} stars</strong> · {{ lesson.minutes }} minutes</p>
+</section>
+
+<section class="panel lesson-brief" aria-labelledby="mission-title">
+  <h2 id="mission-title">Your mission</h2>
+  <p style="white-space:pre-line">{{ lesson.content }}</p>
+  <h3>What you'll learn</h3>
+  <ul>{% for objective in lesson.objectives %}<li>{{ objective }}</li>{% endfor %}</ul>
+</section>
+
+<section class="playground panel" data-lesson-playground data-lesson-type="{{ lesson.lesson_type }}" data-title="{{ lesson.title }}" data-topic="{{ lesson.subtopic }}" data-character="{{ lesson.character }}" data-setting="{{ lesson.setting }}">
+  {% if lesson.lesson_type == 'story' %}
+    <div class="playground-heading"><span class="play-icon">📖</span><div><p class="eyebrow">INTERACTIVE STORY</p><h2>Choose what happens next</h2></div></div>
+    <p class="muted">Tap a choice to help {{ lesson.character }} through the adventure. There is no wrong path—every choice teaches something.</p>
+    <div class="story-stage" aria-live="polite"></div>
+  {% elif lesson.lesson_type == 'game' %}
+    <div class="playground-heading"><span class="play-icon">🎮</span><div><p class="eyebrow">PLAY THE GAME</p><h2>Help {{ lesson.character }} win!</h2></div></div>
+    <p class="muted">Complete three quick challenges. Find the best answer and collect every star.</p>
+    <div class="game-stage" aria-live="polite"></div>
+  {% else %}
+    <div class="playground-heading"><span class="play-icon">🪄</span><div><p class="eyebrow">HANDS-ON CHALLENGE</p><h2>Try it with {{ lesson.character }}</h2></div></div>
+    <p class="muted">Make a choice, see what happens, and finish the mini challenge.</p>
+    <div class="game-stage" aria-live="polite"></div>
+  {% endif %}
+  <div class="completion-area" hidden>
+    <p class="completion-message">Wonderful exploring! You are ready to collect your reward.</p>
+    <form method="post" action="{{ url_for('complete_lesson', lesson_id=lesson.id) }}"><button class="finish-button">Collect {{ lesson.points }} stars ✦</button></form>
+  </div>
+</section>
+
+<section class="panel grown-up-tip"><h2>Grown-up tip</h2><p class="muted">{{ lesson.parent_tip }}</p></section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/lesson-play.js') }}" defer></script>{% endblock %}

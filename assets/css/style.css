@@ -497,3 +497,35 @@ footer a:hover {
         color: black;
     }
 }
+/* Interactive lesson experiences */
+.lesson-brief { margin: 24px 0; }
+.playground { margin: 24px 0; background: linear-gradient(145deg, #fffdf7, #f3edff); }
+.playground-heading { display: flex; gap: 14px; align-items: center; margin-bottom: 10px; }
+.playground-heading h2 { margin: 0; font-size: clamp(1.5rem, 4vw, 2rem); }
+.playground-heading .eyebrow { margin: 0; color: #7650d0; }
+.play-icon { display: grid; place-items: center; flex: 0 0 58px; width: 58px; height: 58px; border-radius: 18px; background: #ffd775; font-size: 2rem; transform: rotate(-6deg); }
+.story-stage, .game-stage { margin-top: 22px; padding: clamp(18px, 4vw, 32px); border: 3px solid #e8dafd; border-radius: 22px; background: #fff; text-align: center; }
+.story-progress { display: flex; justify-content: center; gap: 8px; margin-bottom: 18px; }
+.story-progress span { width: 42px; height: 9px; border-radius: 99px; background: #e5dcec; }
+.story-progress .filled { background: #8ee3bd; }
+.story-character, .mission-orb { display: grid; place-items: center; width: 82px; height: 82px; margin: 0 auto 14px; border-radius: 50%; background: #dbf7e9; font-size: 2.8rem; }
+.mission-orb { background: #e9ddff; }
+.story-copy { max-width: 620px; margin: 0 auto 22px; font-size: 1.2rem; line-height: 1.65; }
+.choice-grid, .answer-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 12px; max-width: 690px; margin: auto; }
+.choice-button, .answer-button { min-height: 72px; background: #fff4ca; border-color: #e2b33d; font-size: 1rem; }
+.answer-list { grid-template-columns: 1fr; max-width: 560px; }
+.answer-button { background: #f5edff; border-color: #c4a7ef; text-align: left; }
+.answer-button.correct { background: #c9f4d9; border-color: #4db373; }
+.answer-button.try-again { background: #ffe5ec; border-color: #e6879f; }
+.answer-button:disabled { cursor: default; transform: none; }
+.game-status { display: flex; justify-content: space-between; gap: 10px; align-items: center; margin-bottom: 18px; font-weight: 700; color: #7650d0; }
+.star-bank { letter-spacing: 3px; color: #e7a800; }
+.play-feedback { margin: 20px 0 0; padding: 12px; border-radius: 14px; font-weight: 700; }
+.play-feedback.success, .win-card { background: #d8f6e4; color: #17663a; }
+.win-card { padding: 22px; border-radius: 18px; }
+.win-card > div { font-size: 3.5rem; }
+.completion-area { margin-top: 24px; padding: 20px; border-radius: 20px; background: #dbf7e9; text-align: center; }
+.completion-message { margin-top: 0; font-weight: 700; font-size: 1.15rem; }
+.finish-button { background: #ffd45d; }
+.grown-up-tip { margin-bottom: 24px; }
+@media (max-width: 600px) { .game-status { align-items: flex-start; flex-direction: column; } .choice-grid { grid-template-columns: 1fr; } }

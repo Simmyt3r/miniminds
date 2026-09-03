@@ -81,5 +81,23 @@ class MiniMindsTests(unittest.TestCase):
             child = app.one("SELECT xp, points FROM children WHERE id = ?", (child_id,))
         self.assertEqual((child['xp'], child['points']), (16, 9))
 
+    def test_lessons_include_playable_games_and_interactive_stories(self):
+        self.client.post('/register', data={'name':'Play Parent','email':'play@example.com','password':'password1'})
+        self.client.post('/parent', data={'name':'Kai','age':'6','pin':'5555'})
+        with app.app.app_context():
+            child_id = app.one("SELECT id FROM children WHERE name = ?", ('Kai',))['id']
+        self.client.post('/kids', data={'child_id': str(child_id), 'pin':'5555'})
+
+        game = self.client.get('/learn/lesson/1')
+        story_id = next(lesson_id for lesson_id, lesson in app.LESSONS.items() if lesson['lesson_type'] == 'story')
+        story = self.client.get(f'/learn/lesson/{story_id}')
+        script = self.client.get('/assets/js/lesson-play.js')
+
+        self.assertIn(b'PLAY THE GAME', game.data)
+        self.assertIn(b'game-stage', game.data)
+        self.assertIn(b'INTERACTIVE STORY', story.data)
+        self.assertIn(b'story-stage', story.data)
+        self.assertIn(b'Challenge ${round + 1} of', script.data)
+
 if __name__ == '__main__':
     unittest.main()
