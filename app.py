@@ -1,3 +1,4 @@
+import json
 import os
 import sqlite3
 from datetime import timedelta
@@ -41,28 +42,17 @@ app.config.update(
     SESSION_COOKIE_SECURE=os.environ.get("VERCEL") == "1",
 )
 
-COURSES = [
-    ("Coding Adventures", "coding", "Learn patterns, commands, and creative problem-solving."),
-    ("Business Buddies", "business", "Discover saving, choices, and the joy of building ideas."),
-    ("Story Magic", "story", "Read, imagine, and solve adventures one page at a time."),
-]
-LESSONS = {
-    "Coding Adventures": [
-        ("Hello, Computer!", 10, 5), ("Colors and Commands", 15, 8),
-        ("The Loop Detective", 20, 10), ("Build a Bug Bot", 18, 9),
-        ("Super Sprite Challenge", 25, 12), ("Code Your Celebration", 22, 11),
-    ],
-    "Business Buddies": [
-        ("Money Matters", 10, 5), ("The Lemonade Stand", 20, 10),
-        ("Saving Secrets", 15, 8), ("The Kindness Shop", 18, 9),
-        ("Plan a Picnic", 20, 10), ("Dream Big, Budget Smart", 25, 12),
-    ],
-    "Story Magic": [
-        ("The Brave Little Robot", 10, 5), ("Dragon's Math Adventure", 15, 8),
-        ("The Friendship Garden", 12, 6), ("Moonlight Map Makers", 18, 9),
-        ("The Lost Library Key", 20, 10), ("Write a Happy Ending", 22, 11),
-    ],
-}
+def load_curriculum():
+    """Load the generated catalogue exported from the supplied curriculum workbook."""
+    catalogue = json.loads((BASE_DIR / "data" / "curriculum.json").read_text(encoding="utf-8"))
+    lessons = {lesson["id"]: lesson for lesson in catalogue["lessons"]}
+    paths = {path["id"]: path for path in catalogue["paths"]}
+    if len(lessons) != 1000 or len(paths) != 25:
+        raise RuntimeError("The MiniMinds curriculum catalogue is incomplete.")
+    return paths, lessons
+
+
+PATHS, LESSONS = load_curriculum()
 
 def db():
     if "db" not in g:
@@ -151,7 +141,7 @@ def child_required():
 
 @app.route("/")
 def home():
-    return render_template("home.html", courses=COURSES)
+    return render_template("home.html", paths=PATHS.values())
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -216,36 +206,46 @@ def kid_dashboard():
     if not child_required(): return redirect(url_for("kids_login"))
     child = one("SELECT name, points, xp FROM children WHERE id = ?", (session["child_id"],))
     completed = {r["lesson_key"] for r in rows("SELECT lesson_key FROM completions WHERE child_id = ?", (session["child_id"],))}
-    return render_template("learn.html", child=child, courses=COURSES, lessons=LESSONS, completed=completed)
+    path_progress = {path_id: sum(f"lesson:{lesson_id}" in completed for lesson_id in path["lesson_ids"])
+                     for path_id, path in PATHS.items()}
+    return render_template("learn.html", child=child, paths=PATHS.values(), path_progress=path_progress)
 
-@app.post("/complete/<course>/<int:index>")
-def complete_lesson(course, index):
+@app.route("/learn/path/<int:path_id>")
+def learning_path(path_id):
     if not child_required(): return redirect(url_for("kids_login"))
-    lessons = LESSONS.get(course)
-    if not lessons or index < 0 or index >= len(lessons): abort(404)
-    key = f"{course}:{index}"
-    # The unique completion key, not a read-then-write check, makes this
-    # idempotent when a learner double-clicks or retries a request.
+    path = PATHS.get(path_id)
+    if not path: abort(404)
+    completed = {r["lesson_key"] for r in rows("SELECT lesson_key FROM completions WHERE child_id = ?", (session["child_id"],))}
+    lessons = [LESSONS[lesson_id] for lesson_id in path["lesson_ids"]]
+    return render_template("path.html", path=path, lessons=lessons, completed=completed)
+
+@app.route("/learn/lesson/<int:lesson_id>")
+def lesson_detail(lesson_id):
+    if not child_required(): return redirect(url_for("kids_login"))
+    lesson = LESSONS.get(lesson_id)
+    if not lesson: abort(404)
+    path = next(path for path in PATHS.values() if lesson_id in path["lesson_ids"])
+    return render_template("lesson.html", lesson=lesson, path=path)
+
+@app.post("/complete/<int:lesson_id>")
+def complete_lesson(lesson_id):
+    if not child_required(): return redirect(url_for("kids_login"))
+    lesson = LESSONS.get(lesson_id)
+    if not lesson: abort(404)
+    key = f"lesson:{lesson_id}"
     if g.postgres:
-        inserted = one(
-            "INSERT INTO completions (child_id, lesson_key) VALUES (?, ?) ON CONFLICT DO NOTHING RETURNING child_id",
-            (session["child_id"], key),
-        )
+        inserted = one("INSERT INTO completions (child_id, lesson_key) VALUES (?, ?) ON CONFLICT DO NOTHING RETURNING child_id", (session["child_id"], key))
     else:
-        inserted = execute(
-            "INSERT OR IGNORE INTO completions (child_id, lesson_key) VALUES (?, ?)",
-            (session["child_id"], key),
-        ).rowcount
+        inserted = execute("INSERT OR IGNORE INTO completions (child_id, lesson_key) VALUES (?, ?)", (session["child_id"], key)).rowcount
     if inserted:
-        title, xp, points = lessons[index]
-        execute("UPDATE children SET xp = xp + ?, points = points + ? WHERE id = ?", (xp, points, session["child_id"]))
+        execute("UPDATE children SET xp = xp + ?, points = points + ? WHERE id = ?", (lesson["xp"], lesson["points"], session["child_id"]))
         if g.postgres:
-            execute(
-                "INSERT INTO reward_events (child_id, completion_lesson_key, xp_delta, points_delta) VALUES (?, ?, ?, ?)",
-                (session["child_id"], key, xp, points),
-            )
-        flash(f"Amazing work! You earned {xp} XP and {points} stars for {title}.", "success")
-    return redirect(url_for("kid_dashboard"))
+            execute("INSERT INTO reward_events (child_id, completion_lesson_key, xp_delta, points_delta) VALUES (?, ?, ?, ?)", (session["child_id"], key, lesson["xp"], lesson["points"]))
+        flash(f"Amazing work! You earned {lesson['xp']} XP and {lesson['points']} stars for {lesson['title']}.", "success")
+    return redirect(url_for("learning_path", path_id=path_id_for_lesson(lesson_id)))
+
+def path_id_for_lesson(lesson_id):
+    return (lesson_id - 1) // 40 + 1
 
 if __name__ == "__main__":
     app.run(debug=True)
