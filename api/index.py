@@ -1,2 +1,3 @@
-"""Vercel entrypoint for MiniMinds Academy."""
-from app import app
+"""Vercel serverless entry point."""
+from app import create_app
+app = create_app()

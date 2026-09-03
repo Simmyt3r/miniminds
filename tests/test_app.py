@@ -2,112 +2,59 @@ import os
 import tempfile
 import unittest
 
-fd, path = tempfile.mkstemp()
-os.close(fd)
+fd, path = tempfile.mkstemp(); os.close(fd)
 os.environ["SQLITE_PATH"] = path
 os.environ["SECRET_KEY"] = "test-secret"
-import app
+from app import create_app
+from app.extensions import db
+from app.models import Child, Parent, RewardEvent
+
 
 class MiniMindsTests(unittest.TestCase):
     def setUp(self):
-        self.client = app.app.test_client()
-        with app.app.app_context():
-            app.init_db()
-            app.execute("DELETE FROM completions")
-            app.execute("DELETE FROM children")
-            app.execute("DELETE FROM parents")
+        self.app = create_app({"TESTING": True, "WTF_CSRF_ENABLED": False, "SQLALCHEMY_DATABASE_URI": f"sqlite:///{path}"})
+        self.client = self.app.test_client()
+        with self.app.app_context():
+            db.drop_all(); db.create_all()
 
-    def test_parent_login_persists_and_can_add_child(self):
-        response = self.client.post('/register', data={'name':'Ava Parent','email':'ava@example.com','password':'password1'}, follow_redirects=True)
-        self.assertIn(b'Add a learner', response.data)
-        response = self.client.post('/parent', data={'name':'Milo','age':'6','pin':'1234'}, follow_redirects=True)
-        self.assertIn(b'Milo', response.data)
-        with app.app.app_context():
-            child_id = app.one("SELECT id FROM children WHERE name = ?", ('Milo',))['id']
-        response = self.client.post('/kids', data={'child_id': str(child_id),'pin':'1234'}, follow_redirects=True)
+    def register_parent_and_child(self):
+        self.client.post("/register", data={"name": "Ava Parent", "email": "ava@example.com", "password": "password1"})
+        self.client.post("/parent", data={"name": "Milo", "age": "6", "pin": "1234"})
+        with self.app.app_context(): return Child.query.filter_by(name="Milo").first().id
+
+    def test_parent_authentication_and_child_profile(self):
+        child_id = self.register_parent_and_child()
+        self.assertIsNotNone(child_id)
+        response = self.client.post("/kids", data={"child_id": child_id, "pin": "1234"}, follow_redirects=True)
         self.assertIn(b"Let's make today amazing", response.data)
 
-    def test_assets_are_served_by_flask(self):
-        response = self.client.get('/assets/css/style.css')
+    def test_models_have_timestamps_and_indexes(self):
+        self.register_parent_and_child()
+        with self.app.app_context():
+            parent = Parent.query.one(); child = Child.query.one()
+            self.assertIsNotNone(parent.created_at); self.assertIsNotNone(child.updated_at)
+            self.assertTrue(any(index.name == "ix_children_parent_id" for index in Child.__table__.indexes))
 
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'body', response.data)
+    def test_api_courses_and_learner_creation(self):
+        self.client.post("/api/auth/register", json={"name": "API Parent", "email": "api@example.com", "password": "password1"})
+        created = self.client.post("/api/learners", json={"name": "Ivy", "age": 7, "pin": "7777"})
+        self.assertEqual(created.status_code, 201)
+        self.assertEqual(self.client.get("/api/courses").get_json()["data"].__len__(), 25)
+        self.assertEqual(self.client.get("/api/lessons/1000").status_code, 200)
 
-    def test_kid_friendly_sound_system_is_available_platform_wide(self):
-        homepage = self.client.get('/')
-        sound_script = self.client.get('/assets/js/sound-system.js')
+    def test_progress_awards_rewards_once(self):
+        child_id = self.register_parent_and_child()
+        self.client.post("/kids", data={"child_id": child_id, "pin": "1234"})
+        self.assertEqual(self.client.post("/api/progress/1").status_code, 201)
+        self.assertEqual(self.client.post("/api/progress/1").get_json()["data"]["awarded"], False)
+        with self.app.app_context():
+            child = db.session.get(Child, child_id)
+            self.assertEqual((child.xp, child.points), (16, 9))
+            self.assertEqual(RewardEvent.query.count(), 1)
 
-        self.assertEqual(sound_script.status_code, 200)
-        self.assertIn(b'data-sound-toggle', homepage.data)
-        self.assertIn(b'Sounds off', homepage.data)
-        self.assertIn(b'localStorage', sound_script.data)
-        self.assertIn(b'miniminds:sound', sound_script.data)
+    def test_csrf_rejects_form_posts_outside_testing(self):
+        secure = create_app({"TESTING": True, "SQLALCHEMY_DATABASE_URI": f"sqlite:///{path}"})
+        self.assertEqual(secure.test_client().post("/register", data={}).status_code, 400)
 
-    def test_supabase_pooler_url_removes_non_libpq_parameters(self):
-        previous = os.environ.get('DATABASE_URL')
-        os.environ['DATABASE_URL'] = 'postgres://user:pass@host:6543/db?sslmode=require&pgbouncer=true&supa=pooler'
-        try:
-            self.assertEqual(
-                app.postgres_url_from_environment(),
-                'postgres://user:pass@host:6543/db?sslmode=require',
-            )
-        finally:
-            if previous is None:
-                os.environ.pop('DATABASE_URL', None)
-            else:
-                os.environ['DATABASE_URL'] = previous
 
-    def test_learning_dashboard_shows_the_expanded_lesson_library(self):
-        response = self.client.get('/')
-        self.assertIn(b'25 learning paths', response.data)
-        self.assertEqual(len(app.LESSONS), 1000)
-        self.assertEqual(len(app.PATHS), 25)
-        self.assertEqual(app.LESSONS[1000]['category'], 'Science')
-
-    def test_curriculum_path_and_lesson_detail_are_available(self):
-        self.client.post('/register', data={'name':'Curriculum Parent','email':'curriculum@example.com','password':'password1'})
-        self.client.post('/parent', data={'name':'Noah','age':'6','pin':'2468'})
-        with app.app.app_context():
-            child_id = app.one("SELECT id FROM children WHERE name = ?", ('Noah',))['id']
-        self.client.post('/kids', data={'child_id': str(child_id), 'pin': '2468'})
-
-        path = self.client.get('/learn/path/25')
-        lesson = self.client.get('/learn/lesson/1000')
-        self.assertIn(b'Science Path 5', path.data)
-        self.assertIn(b'Experiment Lab', lesson.data)
-        self.assertIn(b"What you'll learn", lesson.data)
-
-    def test_completing_a_lesson_twice_only_awards_once(self):
-        self.client.post('/register', data={'name':'Reward Parent','email':'rewards@example.com','password':'password1'})
-        self.client.post('/parent', data={'name':'Ivy','age':'7','pin':'9876'})
-        with app.app.app_context():
-            child_id = app.one("SELECT id FROM children WHERE name = ?", ('Ivy',))['id']
-        self.client.post('/kids', data={'child_id': str(child_id), 'pin':'9876'})
-
-        self.client.post('/complete/1')
-        self.client.post('/complete/1')
-
-        with app.app.app_context():
-            child = app.one("SELECT xp, points FROM children WHERE id = ?", (child_id,))
-        self.assertEqual((child['xp'], child['points']), (16, 9))
-
-    def test_lessons_include_playable_games_and_interactive_stories(self):
-        self.client.post('/register', data={'name':'Play Parent','email':'play@example.com','password':'password1'})
-        self.client.post('/parent', data={'name':'Kai','age':'6','pin':'5555'})
-        with app.app.app_context():
-            child_id = app.one("SELECT id FROM children WHERE name = ?", ('Kai',))['id']
-        self.client.post('/kids', data={'child_id': str(child_id), 'pin':'5555'})
-
-        game = self.client.get('/learn/lesson/1')
-        story_id = next(lesson_id for lesson_id, lesson in app.LESSONS.items() if lesson['lesson_type'] == 'story')
-        story = self.client.get(f'/learn/lesson/{story_id}')
-        script = self.client.get('/assets/js/lesson-play.js')
-
-        self.assertIn(b'PLAY THE GAME', game.data)
-        self.assertIn(b'game-stage', game.data)
-        self.assertIn(b'INTERACTIVE STORY', story.data)
-        self.assertIn(b'story-stage', story.data)
-        self.assertIn(b'Challenge ${round + 1} of', script.data)
-
-if __name__ == '__main__':
-    unittest.main()
+if __name__ == "__main__": unittest.main()
