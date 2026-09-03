@@ -49,10 +49,23 @@ class MiniMindsTests(unittest.TestCase):
 
     def test_learning_dashboard_shows_the_expanded_lesson_library(self):
         response = self.client.get('/')
-        self.assertIn(b'6 playful lessons', response.data)
-        self.assertEqual(len(app.LESSONS['Coding Adventures']), 6)
-        self.assertEqual(len(app.LESSONS['Business Buddies']), 6)
-        self.assertEqual(len(app.LESSONS['Story Magic']), 6)
+        self.assertIn(b'25 learning paths', response.data)
+        self.assertEqual(len(app.LESSONS), 1000)
+        self.assertEqual(len(app.PATHS), 25)
+        self.assertEqual(app.LESSONS[1000]['category'], 'Science')
+
+    def test_curriculum_path_and_lesson_detail_are_available(self):
+        self.client.post('/register', data={'name':'Curriculum Parent','email':'curriculum@example.com','password':'password1'})
+        self.client.post('/parent', data={'name':'Noah','age':'6','pin':'2468'})
+        with app.app.app_context():
+            child_id = app.one("SELECT id FROM children WHERE name = ?", ('Noah',))['id']
+        self.client.post('/kids', data={'child_id': str(child_id), 'pin': '2468'})
+
+        path = self.client.get('/learn/path/25')
+        lesson = self.client.get('/learn/lesson/1000')
+        self.assertIn(b'Science Path 5', path.data)
+        self.assertIn(b'Experiment Lab', lesson.data)
+        self.assertIn(b"What you'll learn", lesson.data)
 
     def test_completing_a_lesson_twice_only_awards_once(self):
         self.client.post('/register', data={'name':'Reward Parent','email':'rewards@example.com','password':'password1'})
@@ -61,12 +74,12 @@ class MiniMindsTests(unittest.TestCase):
             child_id = app.one("SELECT id FROM children WHERE name = ?", ('Ivy',))['id']
         self.client.post('/kids', data={'child_id': str(child_id), 'pin':'9876'})
 
-        self.client.post('/complete/Coding%20Adventures/0')
-        self.client.post('/complete/Coding%20Adventures/0')
+        self.client.post('/complete/1')
+        self.client.post('/complete/1')
 
         with app.app.app_context():
             child = app.one("SELECT xp, points FROM children WHERE id = ?", (child_id,))
-        self.assertEqual((child['xp'], child['points']), (10, 5))
+        self.assertEqual((child['xp'], child['points']), (16, 9))
 
 if __name__ == '__main__':
     unittest.main()
