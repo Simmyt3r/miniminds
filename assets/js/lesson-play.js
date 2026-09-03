@@ -3,7 +3,9 @@
   if (!playground) return;
 
   const data = playground.dataset;
+  const sound = (name) => document.dispatchEvent(new CustomEvent('miniminds:sound', { detail: { name } }));
   const complete = () => {
+    sound('celebrate');
     playground.querySelector('.completion-area').hidden = false;
     playground.querySelector('.completion-area').scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
@@ -41,6 +43,7 @@
           celebrate(`You guided ${data.character} through the story!`);
           complete();
         } else {
+          sound('sparkle');
           scene += 1;
           renderStory();
         }
@@ -72,12 +75,14 @@
     stage.querySelectorAll('.answer-button').forEach(button => button.addEventListener('click', () => {
       const selected = Number(button.dataset.answer);
       if (selected !== challenge.correct) {
+        sound('tryAgain');
         button.classList.add('try-again');
         button.textContent = 'Almost! Try the thoughtful choice 💛';
         return;
       }
       stage.querySelectorAll('.answer-button').forEach(answer => answer.disabled = true);
       button.classList.add('correct');
+      sound('correct');
       button.textContent = 'Great thinking! ⭐';
       setTimeout(() => {
         round += 1;

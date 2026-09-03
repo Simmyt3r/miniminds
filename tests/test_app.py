@@ -33,6 +33,16 @@ class MiniMindsTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'body', response.data)
 
+    def test_kid_friendly_sound_system_is_available_platform_wide(self):
+        homepage = self.client.get('/')
+        sound_script = self.client.get('/assets/js/sound-system.js')
+
+        self.assertEqual(sound_script.status_code, 200)
+        self.assertIn(b'data-sound-toggle', homepage.data)
+        self.assertIn(b'Sounds off', homepage.data)
+        self.assertIn(b'localStorage', sound_script.data)
+        self.assertIn(b'miniminds:sound', sound_script.data)
+
     def test_supabase_pooler_url_removes_non_libpq_parameters(self):
         previous = os.environ.get('DATABASE_URL')
         os.environ['DATABASE_URL'] = 'postgres://user:pass@host:6543/db?sslmode=require&pgbouncer=true&supa=pooler'
