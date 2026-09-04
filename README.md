@@ -77,6 +77,6 @@ Tests cover parent authentication, model timestamps/indexes, API resources, CSRF
 1. Create a PostgreSQL/Supabase database and apply the production schema/migrations.
 2. Add `DATABASE_URL` and a generated `SECRET_KEY` in Vercel project environment variables. Use a server-side pooler URL only.
 3. Set `FLASK_ENV=production`; optionally configure `ADMIN_EMAILS`.
-4. Deploy. [`vercel.json`](vercel.json) routes requests to [`api/index.py`](api/index.py), which creates the Flask app.
+4. Deploy. [`vercel.json`](vercel.json) routes requests to [`api/index.py`](api/index.py), which creates the Flask app. If either variable is temporarily absent, the function starts with a process-local session key and `/tmp` SQLite database instead of crashing; that fallback is ephemeral and is only intended to keep the site reachable while the production variables are configured.
 
 Verify `/`, `/api/courses`, and a database-backed registration flow after deployment. Do not deploy without `DATABASE_URL`: serverless local files are ephemeral.
