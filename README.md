@@ -1,39 +1,82 @@
-# MiniMinds Academy — Flask for Vercel
+# MiniMinds Academy
 
-MiniMinds is now a Flask application deployable as a Vercel Python serverless function. It includes parent registration, learner PIN profiles, lesson progress, rewards, and a secure persistent parent session.
+MiniMinds is a Flask education platform for children aged 4–9. Parents register and manage learner profiles; learners unlock the 1,000-lesson curriculum with a PIN, track progress, and earn XP and stars. The active application is Flask. The previous PHP implementation is retained under `legacy_php/` strictly as a migration reference and is not served or deployed.
 
-## Run locally
+## Architecture
+
+```text
+Browser / REST client
+        │
+        ▼
+Flask application factory (app/__init__.py)
+ ├── auth/                 parent and learner session flows
+ ├── routes/web.py         server-rendered education experience
+ ├── routes/api.py         JSON REST API
+ ├── models/               SQLAlchemy persistence models
+ ├── services/             curriculum and idempotent rewards
+ └── extensions.py         database, migrations, CSRF, rate limiting
+        │
+        ├── PostgreSQL / Supabase (production)
+        └── SQLite (local development and tests only)
+```
+
+## Features
+
+- Parent registration, password-hashed login, and protected dashboard.
+- Parent-owned child learner profiles with four-digit PIN access.
+- 25 paths and 1,000 lessons, completion tracking, XP, stars, and immutable reward events.
+- REST resources under `/api/auth`, `/api/users`, `/api/learners`, `/api/courses`, `/api/lessons`, `/api/progress`, `/api/rewards`, and `/api/admin`.
+- CSRF protection for browser forms, secure signed sessions, input validation, parameterized ORM queries, login rate limiting, and environment-gated administrator metrics.
+
+## Local installation
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+cp .env.example .env
 flask --app app run --debug
 ```
 
-Without configuration, local development uses `instance/miniminds.db`. This is intentionally a local-only convenience database. If `DATABASE_URL` is omitted on Vercel, the app instead uses `/tmp/miniminds.db` so the function can start; that temporary database is reset whenever the function instance is replaced and must not be used for production data.
+For local use, omit `DATABASE_URL`; MiniMinds creates `instance/miniminds.db`. Never use SQLite on Vercel or for persistent production data.
 
-## Deploy to Vercel
+## Environment variables
 
-1. Create a Postgres database (Supabase, Vercel Postgres, Neon, or another provider).
-2. In the Vercel project settings, add the Supabase **server-side** pooler URL as `DATABASE_URL` (or `mini_POSTGRES_URL`). Do not use an anon, publishable, service-role, or browser-exposed `NEXT_PUBLIC_*` key for this setting.
-3. Add a long random `SECRET_KEY`, for example `python -c "import secrets; print(secrets.token_urlsafe(48))"`.
-4. Deploy. `vercel.json` sends every route to `api/index.py`, which exposes the Flask app.
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `SECRET_KEY` | Yes in production | Long random key used to sign sessions. |
+| `DATABASE_URL` | Yes in production | Server-side PostgreSQL/Supabase connection URL. |
+| `FLASK_ENV` | Recommended | Set to `production` to require secure session cookies. |
+| `ADMIN_EMAILS` | Optional | Comma-separated parent emails allowed to call `/api/admin`. |
+| `SQLITE_PATH` | Local only | Overrides the development SQLite file. |
 
-The app creates its tables on first request. Production data—including accounts, child profiles, lesson completions, and XP—is stored in Postgres, not the serverless filesystem.
+Do not commit `.env`, database passwords, Supabase service-role keys, or browser-exposed credentials.
 
-### Supabase production schema
+## Database and migrations
 
-For a new Supabase project, apply [`database/supabase_schema.sql`](database/supabase_schema.sql) once through the Supabase SQL editor or a privileged `psql` connection. It creates constrained, indexed parent/learner/progress tables, an immutable reward ledger, and update timestamps. The application also creates its required core tables when it starts, so deployments remain backward compatible; the SQL file is the recommended auditable provisioning artifact.
-
-Copy `.env.example` to `.env` only for local development and fill in your own values. `.env` is ignored by Git. Rotate any credential that has been pasted into a chat, issue, terminal log, or repository history.
-
-## Persistent login
-
-A successful parent login creates a signed, HTTP-only session cookie that lasts 30 days. On Vercel it is marked `Secure`; `SameSite=Lax` reduces cross-site request exposure. Set a stable `SECRET_KEY` before deploying so sessions remain valid across function invocations and deployments.
-
-## Tests
+The SQLAlchemy models include created/updated timestamps and indexed foreign keys. For a new Supabase database, apply [`database/supabase_schema.sql`](database/supabase_schema.sql), then manage subsequent revisions with Flask-Migrate:
 
 ```bash
-python -m unittest discover -s tests
+flask --app app db migrate -m "describe the schema change"
+flask --app app db upgrade
 ```
+
+See [`migrations/README.md`](migrations/README.md) for the migration policy. The app initializes an empty local database for development convenience; production deployment should run reviewed migrations before serving traffic.
+
+## Testing and developer guide
+
+```bash
+python -m unittest discover -s tests -v
+python -m compileall -q app api tests
+```
+
+Tests cover parent authentication, model timestamps/indexes, API resources, CSRF enforcement, and idempotent progress/reward awarding. Keep HTTP handlers thin, put business rules in `app/services`, and add a test whenever an authorization or reward rule changes.
+
+## Vercel deployment
+
+1. Create a PostgreSQL/Supabase database and apply the production schema/migrations.
+2. Add `DATABASE_URL` and a generated `SECRET_KEY` in Vercel project environment variables. Use a server-side pooler URL only.
+3. Set `FLASK_ENV=production`; optionally configure `ADMIN_EMAILS`.
+4. Deploy. [`vercel.json`](vercel.json) routes requests to [`api/index.py`](api/index.py), which creates the Flask app.
+
+Verify `/`, `/api/courses`, and a database-backed registration flow after deployment. Do not deploy without `DATABASE_URL`: serverless local files are ephemeral.

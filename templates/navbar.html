@@ -1,0 +1,5 @@
+    <nav class="nav">
+      <a class="brand" data-sound="sparkle" href="{{ url_for('web.home') }}"><span>🧠</span> MiniMinds</a>
+      <span class="nav-links"><a href="{{ url_for('auth.kids_login') }}">Kid login</a>{% if session.parent_id %}<a href="{{ url_for('web.parent_dashboard') }}">Parent area</a><a href="{{ url_for('auth.logout') }}">Log out</a>{% else %}<a href="{{ url_for('auth.login') }}">Parent login</a>{% endif %}</span>
+      <div class="sound-controls" aria-label="Sound controls"><button class="sound-toggle" type="button" data-sound-toggle aria-pressed="false" aria-label="Turn on happy sounds"><span aria-hidden="true">🔇</span><span class="sound-toggle-label">Sounds off</span></button><label class="sound-volume" for="sound-volume"><span class="sr-only">Sound volume</span><span aria-hidden="true">🔉</span><input id="sound-volume" data-sound-volume type="range" min="0" max="100" value="65" aria-label="Sound volume"></label></div>
+    </nav>

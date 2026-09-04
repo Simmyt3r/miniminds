@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-<p class="small"><a href="{{ url_for('learning_path', path_id=path.id) }}">← Back to {{ path.title }}</a></p>
+<p class="small"><a href="{{ url_for('web.learning_path', path_id=path.id) }}">← Back to {{ path.title }}</a></p>
 <section class="hero lesson-hero">
   <p class="eyebrow">{{ lesson.category|upper }} · {{ lesson.lesson_type|upper }} · AGES {{ lesson.age_min }}–{{ lesson.age_max }}</p>
   <h1>{{ lesson.title }}</h1>
@@ -31,7 +31,7 @@
   {% endif %}
   <div class="completion-area" hidden>
     <p class="completion-message">Wonderful exploring! You are ready to collect your reward.</p>
-    <form method="post" action="{{ url_for('complete_lesson', lesson_id=lesson.id) }}"><button class="finish-button">Collect {{ lesson.points }} stars ✦</button></form>
+    <form method="post" action="{{ url_for('web.complete_lesson_route', lesson_id=lesson.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="finish-button">Collect {{ lesson.points }} stars ✦</button></form>
   </div>
 </section>
 
