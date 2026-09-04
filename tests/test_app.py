@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
 
 fd, path = tempfile.mkstemp(); os.close(fd)
 os.environ["SQLITE_PATH"] = path
@@ -55,6 +56,12 @@ class MiniMindsTests(unittest.TestCase):
     def test_csrf_rejects_form_posts_outside_testing(self):
         secure = create_app({"TESTING": True, "SQLALCHEMY_DATABASE_URI": f"sqlite:///{path}"})
         self.assertEqual(secure.test_client().post("/register", data={}).status_code, 400)
+
+    def test_serverless_starts_without_configured_environment(self):
+        with patch.dict(os.environ, {"VERCEL": "1"}, clear=True):
+            serverless = create_app({"TESTING": True, "WTF_CSRF_ENABLED": False})
+        self.assertTrue(serverless.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite:////tmp/"))
+        self.assertNotEqual(serverless.config["SECRET_KEY"], "development-only-change-me")
 
 
 if __name__ == "__main__": unittest.main()
