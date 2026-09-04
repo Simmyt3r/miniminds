@@ -1,5 +1,5 @@
 # MiniMinds Academy MVP Development Checklist
-
+i am here
 ## Step 1: Architecture & Database
 - [ ] Create directory structure
 - [ ] Write complete database schema with sample data
